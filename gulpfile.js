@@ -19,6 +19,8 @@ var config = {
 		js: './src/**/*.js',
 		images: './src/images/*',
 		css: [
+      		'./src/normalize.css',
+      		'./src/skeleton.css',
       		'./src/style.css'
     	],
 		dist: './dist',

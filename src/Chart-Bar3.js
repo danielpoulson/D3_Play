@@ -2,7 +2,7 @@ import React from 'react'
 import d3 from 'd3'
 import _ from 'lodash'
 
-export default class ChartBar2 extends React.Component{
+export default class ChartBar3 extends React.Component{
 	constructor() {
 		super()
 		this.state = {data:[]}
@@ -14,11 +14,11 @@ export default class ChartBar2 extends React.Component{
 	
 	renderChart(){
 		var margin = {top: 20, right: 20, bottom: 30, left: 40},
-			width = 960 - margin.left - margin.right,
-			height = 500 - margin.top - margin.bottom;
+			width = 400 - margin.left - margin.right,
+			height = 300 - margin.top - margin.bottom;
 	
 		var x0 = d3.scale.ordinal()
-			.rangeRoundBands([0, width], .1);
+			.rangeRoundBands([0, width], 0.1);
 		
 		var x1 = d3.scale.ordinal();
 		
@@ -26,7 +26,7 @@ export default class ChartBar2 extends React.Component{
 			.range([height, 0]);
 		
 		var color = d3.scale.ordinal()
-			.range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+			.range(["#2F61E4", "#EC0307", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 		
 		var xAxis = d3.svg.axis()
 			.scale(x0)
@@ -40,21 +40,27 @@ export default class ChartBar2 extends React.Component{
 		var svg = d3.select("#chartArea").append("svg")
 			.attr("width", width + margin.left + margin.right)
 			.attr("height", height + margin.top + margin.bottom)
-		.append("g")
+			.append("g")
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 		
+		//This section converts the data from the csv file to data
 		d3.csv("data.csv", function(error, data) {
-		if (error) throw error;
-		
-		var ageNames = d3.keys(data[0]).filter(function(key) { return key !== "State"; });
-		
-		data.forEach(function(d) {
-			d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
+			if (error) throw error;
+
+			//Removes the first element of the array the "Years" item and places in an array
+			//of category names e.g ["closed", "open"]
+			var _category = d3.keys(data[0]).filter(function(key) { return key !== "Years"; });
+
+			// console.log(`This is a category array ${_category}`);
+
+			data.forEach(function(d) {
+				d._object = _category.map(function(name) { return {name: name, value: +d[name]}; });
 		});
-		
-		x0.domain(data.map(function(d) { return d.State; }));
-		x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
-		y.domain([0, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
+		//Passes to x0.domain the Years ["2013", "2014", "2015"]
+		x0.domain(data.map(function(d) { return d.Years; }));
+		//console.log(data.map(function(d) { return d.Years; }));
+		x1.domain(_category).rangeRoundBands([0, x0.rangeBand()]);
+		y.domain([0, d3.max(data, function(d) { return d3.max(d._object, function(d) { return d.value; }); })]);
 		
 		svg.append("g")
 			.attr("class", "x axis")
@@ -69,25 +75,30 @@ export default class ChartBar2 extends React.Component{
 			.attr("y", 6)
 			.attr("dy", ".71em")
 			.style("text-anchor", "end")
-			.text("Population");
+			.text("Deviations");
 		
 		var state = svg.selectAll(".state")
 			.data(data)
 			.enter().append("g")
 			.attr("class", "g")
-			.attr("transform", function(d) { return "translate(" + x0(d.State) + ",0)"; });
+			.attr("transform", function(d) { return "translate(" + x0(d.Years) + ",0)"; });
 		
 		state.selectAll("rect")
-			.data(function(d) { return d.ages; })
+			//.data(function(d) { return d._object; }) //Converted to es6
+			.data((d) => d._object)
 			.enter().append("rect")
 			.attr("width", x1.rangeBand())
 			.attr("x", function(d) { return x1(d.name); })
+			.attr('y', 250)
+			.attr('height', 0)
+			.transition()
+			.duration(2000)
 			.attr("y", function(d) { return y(d.value); })
 			.attr("height", function(d) { return height - y(d.value); })
 			.style("fill", function(d) { return color(d.name); });
 		
 		var legend = svg.selectAll(".legend")
-			.data(ageNames.slice().reverse())
+			.data(_category.slice().reverse())
 			.enter().append("g")
 			.attr("class", "legend")
 			.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
