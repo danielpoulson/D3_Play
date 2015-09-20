@@ -15,6 +15,7 @@ var APP =
 		render:function(){
 			return ( 
 			<div className="container">
+			<h1>This is my chart examples</h1>
 			  <div className="row">
 				<div className="one-half column"><Chart_Bar /></div>
 				<div className="one-half column"><Chart_Pie1 /></div>
